@@ -1,0 +1,9 @@
+DATASETS
+ljspeech
+log
+loss
+params
+samples
+
+
+__pycache__
