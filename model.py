@@ -7,13 +7,13 @@ logabs = lambda x: torch.log(torch.abs(x))
 
 
 class ActNorm(nn.Module):
-    def __init__(self, in_channel, logdet=True):
+    def __init__(self, in_channel, logdet=True, pretrained=False):
         super().__init__()
 
         self.loc = nn.Parameter(torch.zeros(1, in_channel, 1))
         self.scale = nn.Parameter(torch.ones(1, in_channel, 1))
 
-        self.initialized = False
+        self.initialized = pretrained
         self.logdet = logdet
 
     def initialize(self, x):
@@ -102,10 +102,10 @@ def change_order(x, c=None):
 
 
 class Flow(nn.Module):
-    def __init__(self, in_channel, cin_channel, filter_size, num_layer, affine=True, causal=True):
+    def __init__(self, in_channel, cin_channel, filter_size, num_layer, affine=True, causal=True, pretrained=False):
         super().__init__()
 
-        self.actnorm = ActNorm(in_channel)
+        self.actnorm = ActNorm(in_channel, pretrained=pretrained)
         self.coupling = AffineCoupling(in_channel, cin_channel, filter_size=filter_size,
                                        num_layer=num_layer, affine=affine, causal=causal)
 
@@ -127,7 +127,7 @@ class Flow(nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, in_channel, cin_channel, n_flow, n_layer, affine=True, causal=True):
+    def __init__(self, in_channel, cin_channel, n_flow, n_layer, affine=True, causal=True, pretrained=False):
         super().__init__()
 
         squeeze_dim = in_channel * 2
@@ -136,7 +136,7 @@ class Block(nn.Module):
         self.flows = nn.ModuleList()
         for i in range(n_flow):
             self.flows.append(Flow(squeeze_dim, squeeze_dim_c, filter_size=256, num_layer=n_layer, affine=affine,
-                                   causal=causal))
+                                   causal=causal, pretrained=pretrained))
 
     def forward(self, x, c):
         b_size, n_channel, T = x.size()
@@ -167,14 +167,15 @@ class Block(nn.Module):
         return unsqueezed_x, unsqueezed_c
 
 
-class Glowavenet(nn.Module):
-    def __init__(self, in_channel, cin_channel, n_block, n_flow, n_layer, affine=True, causal=True):
+class Flowavenet(nn.Module):
+    def __init__(self, in_channel, cin_channel, n_block, n_flow, n_layer, affine=True, causal=True, pretrained=False):
         super().__init__()
 
         self.blocks = nn.ModuleList()
         self.n_block = n_block
         for i in range(self.n_block):
-            self.blocks.append(Block(in_channel, cin_channel, n_flow, n_layer, affine=affine, causal=causal))
+            self.blocks.append(Block(in_channel, cin_channel, n_flow, n_layer, affine=affine, 
+                                     causal=causal, pretrained=pretrained))
             in_channel *= 2
             cin_channel *= 2
 

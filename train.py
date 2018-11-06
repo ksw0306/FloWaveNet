@@ -3,7 +3,7 @@ from torch import optim
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from data import LJspeechDataset, collate_fn, collate_fn_synthesize
-from model import Glowavenet
+from model import Flowavenet
 from torch.distributions.normal import Normal
 from torch.distributions.uniform import Uniform
 import numpy as np
@@ -19,32 +19,25 @@ torch.backends.cudnn.benchmark = True
 np.set_printoptions(precision=4)
 torch.manual_seed(1111)
 
-parser = argparse.ArgumentParser(description='Train GloWaveNet of LJSpeech',
+parser = argparse.ArgumentParser(description='Train FloWaveNet of LJSpeech',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--data_path', type=str, default='./DATASETS/ljspeech/', help='Dataset Path')
 parser.add_argument('--sample_path', type=str, default='./samples', help='Sample Path')
-parser.add_argument('--model_name', type=str, default='glowavenet_01', help='Model Name')
+parser.add_argument('--save', '-s', type=str, default='./params', help='Folder to save checkpoints.')
+parser.add_argument('--load', '-l', type=str, default='./params', help='Checkpoint path')
+parser.add_argument('--log', type=str, default='./log', help='Log folder.')
+parser.add_argument('--model_name', type=str, default='flowavenet', help='Model Name')
 parser.add_argument('--load_step', type=int, default=0, help='Load Step')
-# Optimization options
 parser.add_argument('--epochs', '-e', type=int, default=1000, help='Number of epochs to train.')
 parser.add_argument('--batch_size', '-b', type=int, default=8, help='Batch size.')
 parser.add_argument('--learning_rate', '-lr', type=float, default=0.001, help='The Learning Rate.')
-# Checkpoints
-parser.add_argument('--save', '-s', type=str, default='./params', help='Folder to save checkpoints.')
-parser.add_argument('--load', '-l', type=str, default='./params', help='Checkpoint path')
 parser.add_argument('--loss', type=str, default='./loss', help='Folder to save loss')
-# Architecture
 parser.add_argument('--n_layer', type=int, default=2, help='Number of layers')
 parser.add_argument('--n_flow', type=int, default=6, help='Number of layers')
 parser.add_argument('--n_block', type=int, default=8, help='Number of layers')
 parser.add_argument('--cin_channels', type=int, default=80, help='Cin Channels')
-parser.add_argument('--causal', type=str, default='yes', help='Casuality')
-# Acceleration
-parser.add_argument('--gpu_index', '-g', type=str, default="0", help='GPU index')
-parser.add_argument('--ngpu', type=int, default=1, help='0 = CPU.')
+parser.add_argument('--causal', type=str, default='no', help='Casuality')
 parser.add_argument('--num_workers', type=int, default=2, help='Number of workers')
-# i/o
-parser.add_argument('--log', type=str, default='./log', help='Log folder.')
 args = parser.parse_args()
 
 # Init logger
@@ -79,13 +72,15 @@ synth_loader = DataLoader(test_dataset, batch_size=1, collate_fn=collate_fn_synt
 
 def build_model():
     causality = True if args.causal == 'yes' else False
-    model = Glowavenet(in_channel=1,
+    pretrained = True if args.load_step > 0 else False
+    model = Flowavenet(in_channel=1,
                        cin_channel=args.cin_channels,
                        n_block=args.n_block,
                        n_flow=args.n_flow,
                        n_layer=args.n_layer,
                        affine=True,
-                       causal=causality)
+                       causal=causality,
+                       pretrained=pretrained)
     return model
 
 
