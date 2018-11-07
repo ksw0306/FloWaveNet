@@ -202,8 +202,7 @@ def load_checkpoint(step, model, optimizer):
 
 
 model = build_model()
-if args.ngpu > 0:
-    model.to(device)
+model.to(device)
 
 optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 criterion_frame = nn.MSELoss()
