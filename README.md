@@ -5,11 +5,7 @@ This is a PyTorch implementation of our work ["FloWaveNet : A Generative Flow fo
 <img src="png/model.png">
 
 For the purpose of parallel sampling, we propose FloWaveNet, a flow-based generative model for raw audio synthesis.
-FloWaveNet can generate audio samples as fast as ClariNet and Parallel WaveNet, while its training procedure is really easy and stable. Our generated audio samples are available at [http://bit.ly/2zpsElV](http://bit.ly/2zpsElV)
-
-
-
-
+FloWaveNet can generate audio samples as fast as ClariNet and Parallel WaveNet, while its training procedure is really easy and stable. Our generated audio samples are available at [http://bit.ly/2zpsElV](http://bit.ly/2zpsElV). Also, our implementation of ClariNet (Gaussian WaveNet and Gaussian IAF) is available at [https://github.com/ksw0306/ClariNet](https://github.com/ksw0306/ClariNet)
 
 
 # Requirements
@@ -43,6 +39,7 @@ ex) `python synthesize.py --model_name flowavenet --n_block 8 --n_flow 6 --n_lay
 
 Sample Link : [http://bit.ly/2zpsElV](http://bit.ly/2zpsElV)
 
+Our implementation of ClariNet (Gaussian WaveNet, Gaussian IAF) : [https://github.com/ksw0306/ClariNet](https://github.com/ksw0306/ClariNet)
 
 - Results 1 : Model Comparisons (WaveNet (MoL, Gaussian), ClariNet and FloWaveNet)
 
