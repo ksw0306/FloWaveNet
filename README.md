@@ -32,11 +32,11 @@ PyTorch 0.4.1 & python 3.6 & Librosa
 
 #### Step 4. Synthesize
 
-This step should be followed by Step 3 to load pre-trained model.
-
 --load_step CHECKPOINT # of Pre-trained model
 
-ex) `python synthesize.py --model_name flowavenet --n_block 8 --n_flow 6 --n_layer 2 --causal no --load_step 100000`
+--temp TEMPERATURE / z ~ N(0, 1 * TEMPERATURE)
+
+ex) `python synthesize.py --model_name flowavenet --n_block 8 --n_flow 6 --n_layer 2 --causal no --load_step 100000 --temp 0.7 --num_samples 10`
 
 
 # Sample Link
