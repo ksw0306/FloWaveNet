@@ -57,12 +57,12 @@ class ActNorm(nn.Module):
 
 
 class AffineCoupling(nn.Module):
-    def __init__(self, in_channel, cin_channel, filter_size=512, num_layer=6, affine=True, causal=True):
+    def __init__(self, in_channel, cin_channel, filter_size=256, num_layer=6, affine=True, causal=False):
         super().__init__()
 
         self.affine = affine
         self.net = Wavenet(in_channels=in_channel//2, out_channels=in_channel if self.affine else in_channel//2,
-                           num_blocks=1, num_layers=num_layer, residual_channels=256,
+                           num_blocks=1, num_layers=num_layer, residual_channels=filter_size,
                            gate_channels=filter_size, skip_channels=filter_size,
                            kernel_size=3, cin_channels=cin_channel//2, causal=causal)
 
@@ -102,7 +102,7 @@ def change_order(x, c=None):
 
 
 class Flow(nn.Module):
-    def __init__(self, in_channel, cin_channel, filter_size, num_layer, affine=True, causal=True, pretrained=False):
+    def __init__(self, in_channel, cin_channel, filter_size, num_layer, affine=True, causal=False, pretrained=False):
         super().__init__()
 
         self.actnorm = ActNorm(in_channel, pretrained=pretrained)
@@ -127,7 +127,7 @@ class Flow(nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, in_channel, cin_channel, n_flow, n_layer, affine=True, causal=True, pretrained=False):
+    def __init__(self, in_channel, cin_channel, n_flow, n_layer, affine=True, causal=False, pretrained=False):
         super().__init__()
 
         squeeze_dim = in_channel * 2
@@ -168,7 +168,7 @@ class Block(nn.Module):
 
 
 class Flowavenet(nn.Module):
-    def __init__(self, in_channel, cin_channel, n_block, n_flow, n_layer, affine=True, causal=True, pretrained=False):
+    def __init__(self, in_channel, cin_channel, n_block, n_flow, n_layer, affine=True, causal=False, pretrained=False):
         super().__init__()
 
         self.blocks = nn.ModuleList()
