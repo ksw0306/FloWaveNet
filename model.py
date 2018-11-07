@@ -21,15 +21,15 @@ class ActNorm(nn.Module):
             flatten = x.permute(1, 0, 2).contiguous().view(x.shape[1], -1)
             mean = (
                 flatten.mean(1)
-                .unsqueeze(1)
-                .unsqueeze(2)
-                .permute(1, 0, 2)
+                    .unsqueeze(1)
+                    .unsqueeze(2)
+                    .permute(1, 0, 2)
             )
             std = (
                 flatten.std(1)
-                .unsqueeze(1)
-                .unsqueeze(2)
-                .permute(1, 0, 2)
+                    .unsqueeze(1)
+                    .unsqueeze(2)
+                    .permute(1, 0, 2)
             )
 
             self.loc.data.copy_(-mean)
@@ -61,10 +61,10 @@ class AffineCoupling(nn.Module):
         super().__init__()
 
         self.affine = affine
-        self.net = Wavenet(in_channels=in_channel//2, out_channels=in_channel if self.affine else in_channel//2,
+        self.net = Wavenet(in_channels=in_channel // 2, out_channels=in_channel if self.affine else in_channel // 2,
                            num_blocks=1, num_layers=num_layer, residual_channels=filter_size,
                            gate_channels=filter_size, skip_channels=filter_size,
-                           kernel_size=3, cin_channels=cin_channel//2, causal=causal)
+                           kernel_size=3, cin_channels=cin_channel // 2, causal=causal)
 
     def forward(self, x, c=None):
         in_a, in_b = x.chunk(2, 1)
@@ -174,7 +174,7 @@ class Flowavenet(nn.Module):
         self.blocks = nn.ModuleList()
         self.n_block = n_block
         for i in range(self.n_block):
-            self.blocks.append(Block(in_channel, cin_channel, n_flow, n_layer, affine=affine, 
+            self.blocks.append(Block(in_channel, cin_channel, n_flow, n_layer, affine=affine,
                                      causal=causal, pretrained=pretrained))
             in_channel *= 2
             cin_channel *= 2

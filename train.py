@@ -5,14 +5,12 @@ from torch.utils.data import DataLoader
 from data import LJspeechDataset, collate_fn, collate_fn_synthesize
 from model import Flowavenet
 from torch.distributions.normal import Normal
-from torch.distributions.uniform import Uniform
 import numpy as np
 import librosa
 import os
 import argparse
 import time
 import json
-import math
 import gc
 
 torch.backends.cudnn.benchmark = True
@@ -118,7 +116,7 @@ def train(epoch, model, optimizer):
         running_loss[0] += loss.item() / display_step
         running_loss[1] += log_p.item() / display_step
         running_loss[2] += logdet.item() / display_step
-        
+
         epoch_loss += loss.item()
         if (batch_idx + 1) % display_step == 0:
             print('Global Step : {}, [{}, {}] [Log pdf, Log p(z), Log Det] : {}'
@@ -166,7 +164,7 @@ def synthesize(model):
 
             q_0 = Normal(x.new_zeros(x.size()), x.new_ones(x.size()))
             z = q_0.sample()
-            
+
             start_time = time.time()
             with torch.no_grad():
                 y_gen = model.reverse(z, c).squeeze()
@@ -252,14 +250,3 @@ for epoch in range(global_epoch + 1, args.epochs + 1):
     gc.collect()
 
 log.close()
-
-
-
-
-
-
-
-
-
-
-

@@ -97,7 +97,3 @@ model.eval()
 
 with torch.no_grad():
     synthesize(model)
-
-
-
-

@@ -37,7 +37,8 @@ def _process_utterance(out_dir, index, wav_path, text):
 
     # Compute a mel-scale spectrogram from the trimmed wav:
     # (N, D)
-    mel_spectrogram = librosa.feature.melspectrogram(wav, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=80, fmin=125, fmax=7600).T
+    mel_spectrogram = librosa.feature.melspectrogram(wav, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=80,
+                                                     fmin=125, fmax=7600).T
 
     # mel_spectrogram = np.round(mel_spectrogram, decimals=2)
     mel_spectrogram = 20 * np.log10(np.maximum(1e-4, mel_spectrogram)) - reference
