@@ -4,13 +4,15 @@ This is a PyTorch implementation of our work ["FloWaveNet : A Generative Flow fo
 
 <img src="png/model.png">
 
-For the purpose of parallel sampling, we propose FloWaveNet, a flow-based generative model for raw audio synthesis.
-FloWaveNet can generate audio samples as fast as ClariNet and Parallel WaveNet, while its training procedure is really easy and stable. Our generated audio samples are available at [http://bit.ly/2zpsElV](http://bit.ly/2zpsElV). Also, our implementation of ClariNet (Gaussian WaveNet and Gaussian IAF) is available at [https://github.com/ksw0306/ClariNet](https://github.com/ksw0306/ClariNet)
+For a purpose of parallel sampling, we propose FloWaveNet, a flow-based generative model for raw audio synthesis.
+FloWaveNet can generate audio samples as fast as ClariNet and Parallel WaveNet, while the training procedure is really easy and stable with a single-stage pipeline. Our generated audio samples are available at [http://bit.ly/2zpsElV](http://bit.ly/2zpsElV). Also, our implementation of ClariNet (Gaussian WaveNet and Gaussian IAF) is available at [https://github.com/ksw0306/ClariNet](https://github.com/ksw0306/ClariNet)
 
 
 # Requirements
 
-PyTorch 0.4.1 & python 3.6 & Librosa
+- PyTorch 0.4.1
+- Python 3.6
+- Librosa
 
 # Examples
 
@@ -28,9 +30,9 @@ PyTorch 0.4.1 & python 3.6 & Librosa
 
 #### Step 4. Synthesize
 
---load_step CHECKPOINT # of Pre-trained model
+`--load_step CHECKPOINT` : the # of the pre-trained model's global training step (also depicted in the trained weight file)
 
---temp TEMPERATURE / z ~ N(0, 1 * TEMPERATURE)
+`--temp`: Temperature (standard deviation) value implemented as z ~ N(0, 1 * TEMPERATURE)
 
 ex) `python synthesize.py --model_name flowavenet --n_block 8 --n_flow 6 --n_layer 2 --causal no --load_step 100000 --temp 0.7 --num_samples 10`
 
