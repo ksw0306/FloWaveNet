@@ -1,6 +1,6 @@
-# FloWaveNet : A Generative Flow for Raw Audio
+# FloWaveNet : A Generative Flow for Raw Audio 
 
-This is a PyTorch implementation of our work "FloWaveNet : A Generative Flow for Raw Audio".
+This is a PyTorch implementation of our work ["FloWaveNet : A Generative Flow for Raw Audio".](https://arxiv.org/abs/1811.02155)
 
 <img src="png/model.png">
 
