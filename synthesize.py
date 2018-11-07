@@ -26,7 +26,7 @@ parser.add_argument('--n_block', type=int, default=8, help='Number of layers')
 parser.add_argument('--cin_channels', type=int, default=80, help='Cin Channels')
 parser.add_argument('--causal', type=str, default='no', help='Casuality')
 parser.add_argument('--num_workers', type=int, default=0, help='Number of workers')
-# i/o
+
 parser.add_argument('--log', type=str, default='./log', help='Log folder.')
 args = parser.parse_args()
 
