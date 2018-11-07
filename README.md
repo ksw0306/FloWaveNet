@@ -1,14 +1,14 @@
-# FloWaveNet
+# FloWaveNet : A Generative Flow for Raw Audio
 
-A Generative Flow for Raw Audio
+This is a PyTorch implementation of our work "FloWaveNet : A Generative Flow for Raw Audio".
 
-This is a PyTorch implementation of FloWaveNet.
+<img src="png/model.png">
 
 For the purpose of parallel sampling, we propose FloWaveNet, a flow-based generative model for raw audio synthesis.
 FloWaveNet can generate audio samples as fast as ClariNet and Parallel WaveNet, while its training procedure is really easy and stable. Our generated audio samples are available at [http://bit.ly/2zpsElV](http://bit.ly/2zpsElV)
 
 
-<img src="png/model.png">
+
 
 
 
