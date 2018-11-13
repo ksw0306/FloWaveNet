@@ -1,20 +1,18 @@
-# FloWaveNet
+# FloWaveNet : A Generative Flow for Raw Audio 
 
-A Generative Flow for Raw Audio
-
-This is a PyTorch implementation of FloWaveNet.
-
-For the purpose of parallel sampling, we propose FloWaveNet, a flow-based generative model for raw audio synthesis.
-FloWaveNet can generate audio samples as fast as ClariNet and Parallel WaveNet, while its training procedure is really easy and stable. Our generated audio samples are available at [http://bit.ly/2zpsElV](http://bit.ly/2zpsElV)
-
+This is a PyTorch implementation of our work ["FloWaveNet : A Generative Flow for Raw Audio".](https://arxiv.org/abs/1811.02155)
 
 <img src="png/model.png">
 
+For a purpose of parallel sampling, we propose FloWaveNet, a flow-based generative model for raw audio synthesis.
+FloWaveNet can generate audio samples as fast as ClariNet and Parallel WaveNet, while the training procedure is really easy and stable with a single-stage pipeline. Our generated audio samples are available at [http://bit.ly/2zpsElV](http://bit.ly/2zpsElV). Also, our implementation of ClariNet (Gaussian WaveNet and Gaussian IAF) is available at [https://github.com/ksw0306/ClariNet](https://github.com/ksw0306/ClariNet)
 
 
 # Requirements
 
-PyTorch 0.4.1 & python 3.6 & Librosa
+- PyTorch 0.4.1
+- Python 3.6
+- Librosa
 
 # Examples
 
@@ -32,17 +30,18 @@ PyTorch 0.4.1 & python 3.6 & Librosa
 
 #### Step 4. Synthesize
 
-This step should be followed by Step 3 to load pre-trained model.
+`--load_step CHECKPOINT` : the # of the pre-trained model's global training step (also depicted in the trained weight file)
 
---load_step CHECKPOINT # of Pre-trained model
+`--temp`: Temperature (standard deviation) value implemented as z ~ N(0, 1 * TEMPERATURE)
 
-ex) `python synthesize.py --model_name flowavenet --n_block 8 --n_flow 6 --n_layer 2 --causal no --load_step 100000`
+ex) `python synthesize.py --model_name flowavenet --n_block 8 --n_flow 6 --n_layer 2 --causal no --load_step 100000 --temp 0.7 --num_samples 10`
 
 
 # Sample Link
 
 Sample Link : [http://bit.ly/2zpsElV](http://bit.ly/2zpsElV)
 
+Our implementation of ClariNet (Gaussian WaveNet, Gaussian IAF) : [https://github.com/ksw0306/ClariNet](https://github.com/ksw0306/ClariNet)
 
 - Results 1 : Model Comparisons (WaveNet (MoL, Gaussian), ClariNet and FloWaveNet)
 

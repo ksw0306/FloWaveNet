@@ -22,8 +22,8 @@ class Conv(nn.Module):
         if self.causal and self.padding is not 0:
             out = out[:, :, :-self.padding]
         return out
-    
-    
+
+
 class ZeroConv1d(nn.Module):
     def __init__(self, in_channel, out_channel):
         super().__init__()
@@ -79,25 +79,25 @@ class ResBlock(nn.Module):
         res = self.res_conv(out)
         skip = self.skip_conv(out) if self.skip else None
         return (tensor + res) * math.sqrt(0.5), skip
-        
+
 
 class Wavenet(nn.Module):
     def __init__(self, in_channels=1, out_channels=2, num_blocks=1, num_layers=6,
                  residual_channels=256, gate_channels=256, skip_channels=256,
                  kernel_size=3, cin_channels=80, causal=True):
-        super(Wavenet, self). __init__()
+        super(Wavenet, self).__init__()
 
         self.skip = True if skip_channels is not None else False
         self.front_conv = nn.Sequential(
-                Conv(in_channels, residual_channels, 3, causal=causal),
-                nn.ReLU()
+            Conv(in_channels, residual_channels, 3, causal=causal),
+            nn.ReLU()
         )
 
         self.res_blocks = nn.ModuleList()
         for b in range(num_blocks):
             for n in range(num_layers):
                 self.res_blocks.append(ResBlock(residual_channels, gate_channels, skip_channels,
-                                                kernel_size, dilation=kernel_size**n,
+                                                kernel_size, dilation=kernel_size ** n,
                                                 cin_channels=cin_channels, local_conditioning=True,
                                                 causal=causal))
 
@@ -117,7 +117,7 @@ class Wavenet(nn.Module):
                 h, s = f(h, c)
                 skip += s
             else:
-                h, _ = f(h,c)
+                h, _ = f(h, c)
         if self.skip:
             out = self.final_conv(skip)
         else:

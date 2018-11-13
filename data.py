@@ -3,9 +3,6 @@ from torch.utils.data import Dataset
 import numpy as np
 import os
 
-
-use_cuda = torch.cuda.is_available()
-
 max_time_steps = 6400
 upsample_conditional_features = True
 hop_length = 256
@@ -83,7 +80,7 @@ def collate_fn(batch):
             if upsample_conditional_features:
                 assert len(x) % len(c) == 0 and len(x) // len(c) == hop_length
 
-                max_steps = max_time_steps - max_time_steps % hop_length   # To ensure Divisibility
+                max_steps = max_time_steps - max_time_steps % hop_length  # To ensure Divisibility
 
                 if len(x) > max_steps:
                     max_time_frames = max_steps // hop_length
@@ -160,7 +157,3 @@ def collate_fn_synthesize(batch):
     # Convert to channel first i.e., (B, C, T) / C = 1
     x_batch = torch.tensor(x_batch).transpose(1, 2).contiguous()
     return x_batch, c_batch
-
-
-
-
