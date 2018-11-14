@@ -199,54 +199,55 @@ def load_checkpoint(step, model, optimizer):
     return model, optimizer
 
 
-model = build_model()
-model.to(device)
+if __name__ == "__main__":
+    model = build_model()
+    model.to(device)
 
-optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-criterion_frame = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+    criterion_frame = nn.MSELoss()
 
-global_step = 0
-global_epoch = 0
-load_step = args.load_step
+    global_step = 0
+    global_epoch = 0
+    load_step = args.load_step
 
-log = open(os.path.join(args.log, '{}.txt'.format(args.model_name)), 'w')
-state = {k: v for k, v in args._get_kwargs()}
+    log = open(os.path.join(args.log, '{}.txt'.format(args.model_name)), 'w')
+    state = {k: v for k, v in args._get_kwargs()}
 
-if load_step == 0:
-    list_train_loss, list_loss = [], []
-    log.write(json.dumps(state) + '\n')
-    test_loss = 100.0
-else:
-    model, optimizer = load_checkpoint(load_step, model, optimizer)
-    list_train_loss = np.load('{}/{}_train.npy'.format(args.loss, args.model_name)).tolist()
-    list_loss = np.load('{}/{}.npy'.format(args.loss, args.model_name)).tolist()
-    list_train_loss = list_train_loss[:global_epoch]
-    list_loss = list_loss[:global_epoch]
-    test_loss = np.min(list_loss)
+    if load_step == 0:
+        list_train_loss, list_loss = [], []
+        log.write(json.dumps(state) + '\n')
+        test_loss = 100.0
+    else:
+        model, optimizer = load_checkpoint(load_step, model, optimizer)
+        list_train_loss = np.load('{}/{}_train.npy'.format(args.loss, args.model_name)).tolist()
+        list_loss = np.load('{}/{}.npy'.format(args.loss, args.model_name)).tolist()
+        list_train_loss = list_train_loss[:global_epoch]
+        list_loss = list_loss[:global_epoch]
+        test_loss = np.min(list_loss)
 
-for epoch in range(global_epoch + 1, args.epochs + 1):
-    training_epoch_loss = train(epoch, model, optimizer)
-    with torch.no_grad():
-        test_epoch_loss = evaluate(model)
-
-    state['training_loss'] = training_epoch_loss
-    state['eval_loss'] = test_epoch_loss
-    state['epoch'] = epoch
-    list_train_loss.append(training_epoch_loss)
-    list_loss.append(test_epoch_loss)
-
-    if test_loss > test_epoch_loss:
-        test_loss = test_epoch_loss
-        save_checkpoint(model, optimizer, global_step, epoch)
-        print('Epoch {} Model Saved! Loss : {:.4f}'.format(epoch, test_loss))
+    for epoch in range(global_epoch + 1, args.epochs + 1):
+        training_epoch_loss = train(epoch, model, optimizer)
         with torch.no_grad():
-            synthesize(model)
-    np.save('{}/{}_train.npy'.format(args.loss, args.model_name), list_train_loss)
-    np.save('{}/{}.npy'.format(args.loss, args.model_name), list_loss)
+            test_epoch_loss = evaluate(model)
 
-    log.write('%s\n' % json.dumps(state))
-    log.flush()
-    print(state)
-    gc.collect()
+        state['training_loss'] = training_epoch_loss
+        state['eval_loss'] = test_epoch_loss
+        state['epoch'] = epoch
+        list_train_loss.append(training_epoch_loss)
+        list_loss.append(test_epoch_loss)
 
-log.close()
+        if test_loss > test_epoch_loss:
+            test_loss = test_epoch_loss
+            save_checkpoint(model, optimizer, global_step, epoch)
+            print('Epoch {} Model Saved! Loss : {:.4f}'.format(epoch, test_loss))
+            with torch.no_grad():
+                synthesize(model)
+        np.save('{}/{}_train.npy'.format(args.loss, args.model_name), list_train_loss)
+        np.save('{}/{}.npy'.format(args.loss, args.model_name), list_loss)
+
+        log.write('%s\n' % json.dumps(state))
+        log.flush()
+        print(state)
+        gc.collect()
+
+    log.close()

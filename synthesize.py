@@ -88,12 +88,13 @@ def load_checkpoint(step, model):
     return model
 
 
-step = args.load_step
-global_step = step
-model = build_model()
-model = load_checkpoint(step, model)
-model = model.to(device)
-model.eval()
+if __name__ == "__main__":
+    step = args.load_step
+    global_step = step
+    model = build_model()
+    model = load_checkpoint(step, model)
+    model = model.to(device)
+    model.eval()
 
-with torch.no_grad():
-    synthesize(model)
+    with torch.no_grad():
+        synthesize(model)
