@@ -36,6 +36,7 @@ parser.add_argument('--n_block', type=int, default=8, help='Number of layers')
 parser.add_argument('--cin_channels', type=int, default=80, help='Cin Channels')
 parser.add_argument('--causal', type=str, default='no', help='Casuality')
 parser.add_argument('--num_workers', type=int, default=2, help='Number of workers')
+parser.add_argument('--num_gpu', type=int, default=1, help='Number of GPUs to use. >1 uses DataParallel')
 args = parser.parse_args()
 
 # Init logger
@@ -106,6 +107,7 @@ def train(epoch, model, optimizer):
 
         optimizer.zero_grad()
         log_p, logdet = model(x, c)
+        log_p, logdet = torch.mean(log_p), torch.mean(logdet)
 
         loss = -(log_p + logdet)
         loss.backward()
@@ -137,6 +139,7 @@ def evaluate(model):
     for batch_idx, (x, c) in enumerate(test_loader):
         x, c = x.to(device), c.to(device)
         log_p, logdet = model(x, c)
+        log_p, logdet = torch.mean(log_p), torch.mean(logdet)
         loss = -(log_p + logdet)
 
         running_loss[0] += loss.item() / display_step
@@ -167,7 +170,10 @@ def synthesize(model):
 
             start_time = time.time()
             with torch.no_grad():
-                y_gen = model.reverse(z, c).squeeze()
+                if args.num_gpu == 1:
+                    y_gen = model.reverse(z, c).squeeze()
+                else:
+                    y_gen = model.module.reverse(z, c).squeeze()
             wav = y_gen.to(torch.device("cpu")).data.numpy()
             wav_name = '{}/{}/generate_{}_{}.wav'.format(args.sample_path, args.model_name, global_step, batch_idx)
             print('{} seconds'.format(time.time() - start_time))
@@ -192,7 +198,21 @@ def load_checkpoint(step, model, optimizer):
     checkpoint_path = os.path.join(args.save, args.model_name, "checkpoint_step{:09d}.pth".format(step))
     print("Load checkpoint from: {}".format(checkpoint_path))
     checkpoint = torch.load(checkpoint_path)
-    model.load_state_dict(checkpoint["state_dict"])
+
+    # generalized load procedure for both single-gpu and DataParallel models
+    # https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
+    try:
+        model.load_state_dict(checkpoint["state_dict"])
+    except RuntimeError:
+        print("INFO: this model is trained with DataParallel. Creating new state_dict without module...")
+        state_dict = checkpoint["state_dict"]
+        from collections import OrderedDict
+        new_state_dict = OrderedDict()
+        for k, v in state_dict.items():
+            name = k[7:]  # remove `module.`
+            new_state_dict[name] = v
+        model.load_state_dict(new_state_dict)
+
     optimizer.load_state_dict(checkpoint["optimizer"])
     global_step = checkpoint["global_step"]
     global_epoch = checkpoint["global_epoch"]
@@ -202,6 +222,16 @@ def load_checkpoint(step, model, optimizer):
 if __name__ == "__main__":
     model = build_model()
     model.to(device)
+
+    pretrained = True if args.load_step > 0 else False
+    if pretrained is False:
+        # do ActNorm initialization first (if model.pretrained is True, this does nothing so no worries)
+        x_seed, c_seed = next(iter(train_loader))
+        x_seed, c_seed = x_seed.to(device), c_seed.to(device)
+        with torch.no_grad():
+            _, _ = model(x_seed, c_seed)
+        del x_seed, c_seed, _
+    # then convert the model to DataParallel later (since ActNorm init from the DataParallel is wacky)
 
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
     criterion_frame = nn.MSELoss()
@@ -224,6 +254,10 @@ if __name__ == "__main__":
         list_train_loss = list_train_loss[:global_epoch]
         list_loss = list_loss[:global_epoch]
         test_loss = np.min(list_loss)
+
+    if args.num_gpu > 1:
+        print("num_gpu > 1 detected. converting the model to DataParallel...")
+        model = torch.nn.DataParallel(model)
 
     for epoch in range(global_epoch + 1, args.epochs + 1):
         training_epoch_loss = train(epoch, model, optimizer)

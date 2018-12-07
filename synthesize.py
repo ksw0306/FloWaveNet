@@ -84,7 +84,19 @@ def load_checkpoint(step, model):
     checkpoint_path = os.path.join(args.load, args.model_name, "checkpoint_step{:09d}.pth".format(step))
     print("Load checkpoint from: {}".format(checkpoint_path))
     checkpoint = torch.load(checkpoint_path)
-    model.load_state_dict(checkpoint["state_dict"])
+    # generalized load procedure for both single-gpu and DataParallel models
+    # https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
+    try:
+        model.load_state_dict(checkpoint["state_dict"])
+    except RuntimeError:
+        print("INFO: this model is trained with DataParallel. Creating new state_dict without module...")
+        state_dict = checkpoint["state_dict"]
+        from collections import OrderedDict
+        new_state_dict = OrderedDict()
+        for k, v in state_dict.items():
+            name = k[7:]  # remove `module.`
+            new_state_dict[name] = v
+        model.load_state_dict(new_state_dict)
     return model
 
 
