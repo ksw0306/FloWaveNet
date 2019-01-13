@@ -9,7 +9,7 @@ import os
 import argparse
 import time
 
-torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.benchmark = False
 np.set_printoptions(precision=4)
 parser = argparse.ArgumentParser(description='Train FloWaveNet of LJSpeech',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
