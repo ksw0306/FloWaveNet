@@ -26,8 +26,8 @@ parser.add_argument('--load', '-l', type=str, default='./params', help='Checkpoi
 parser.add_argument('--log', type=str, default='./log', help='Log folder.')
 parser.add_argument('--model_name', type=str, default='flowavenet', help='Model Name')
 parser.add_argument('--load_step', type=int, default=0, help='Load Step')
-parser.add_argument('--epochs', '-e', type=int, default=1000, help='Number of epochs to train.')
-parser.add_argument('--batch_size', '-b', type=int, default=8, help='Batch size.')
+parser.add_argument('--epochs', '-e', type=int, default=5000, help='Number of epochs to train.')
+parser.add_argument('--batch_size', '-b', type=int, default=2, help='Batch size.')
 parser.add_argument('--learning_rate', '-lr', type=float, default=0.001, help='The Learning Rate.')
 parser.add_argument('--loss', type=str, default='./loss', help='Folder to save loss')
 parser.add_argument('--n_layer', type=int, default=2, help='Number of layers')
@@ -70,7 +70,6 @@ synth_loader = DataLoader(test_dataset, batch_size=1, collate_fn=collate_fn_synt
 
 
 def build_model():
-    causality = True if args.causal == 'yes' else False
     pretrained = True if args.load_step > 0 else False
     model = Flowavenet(in_channel=1,
                        cin_channel=args.cin_channels,
@@ -78,31 +77,21 @@ def build_model():
                        n_flow=args.n_flow,
                        n_layer=args.n_layer,
                        affine=True,
-                       causal=causality,
-                       pretrained=pretrained)
+                       pretrained=pretrained,
+                       block_per_split=args.block_per_split)
     return model
 
 
-def train(epoch, model, optimizer):
+def train(epoch, model, optimizer, scheduler):
     global global_step
     epoch_loss = 0.0
     running_loss = [0., 0., 0.]
     model.train()
     display_step = 100
     for batch_idx, (x, c) in enumerate(train_loader):
+        scheduler.step()
         global_step += 1
-        if global_step == 200000:
-            for param_group in optimizer.param_groups:
-                param_group['lr'] *= 0.5
-                state['learning_rate'] = param_group['lr']
-        if global_step == 400000:
-            for param_group in optimizer.param_groups:
-                param_group['lr'] *= 0.5
-                state['learning_rate'] = param_group['lr']
-        if global_step == 600000:
-            for param_group in optimizer.param_groups:
-                param_group['lr'] *= 0.5
-                state['learning_rate'] = param_group['lr']
+
         x, c = x.to(device), c.to(device)
 
         optimizer.zero_grad()
@@ -182,16 +171,18 @@ def synthesize(model):
             del x, c, z, q_0, y_gen, wav
 
 
-def save_checkpoint(model, optimizer, global_step, global_epoch):
+def save_checkpoint(model, optimizer, scheduler, global_step, global_epoch):
     checkpoint_path = os.path.join(args.save, args.model_name, "checkpoint_step{:09d}.pth".format(global_step))
     optimizer_state = optimizer.state_dict()
+    scheduler_state = scheduler.state_dict()
     torch.save({"state_dict": model.state_dict(),
                 "optimizer": optimizer_state,
+                "scheduler": scheduler_state,
                 "global_step": global_step,
                 "global_epoch": global_epoch}, checkpoint_path)
 
 
-def load_checkpoint(step, model, optimizer):
+def load_checkpoint(step, model, optimizer, scheduler):
     global global_step
     global global_epoch
 
@@ -214,9 +205,11 @@ def load_checkpoint(step, model, optimizer):
         model.load_state_dict(new_state_dict)
 
     optimizer.load_state_dict(checkpoint["optimizer"])
+    scheduler.load_state_dict(checkpoint["scheduler"])
     global_step = checkpoint["global_step"]
     global_epoch = checkpoint["global_epoch"]
-    return model, optimizer
+
+    return model, optimizer, scheduler
 
 
 if __name__ == "__main__":
@@ -234,6 +227,7 @@ if __name__ == "__main__":
     # then convert the model to DataParallel later (since ActNorm init from the DataParallel is wacky)
 
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=200000, gamma=0.5)
     criterion_frame = nn.MSELoss()
 
     global_step = 0
@@ -248,7 +242,7 @@ if __name__ == "__main__":
         log.write(json.dumps(state) + '\n')
         test_loss = 100.0
     else:
-        model, optimizer = load_checkpoint(load_step, model, optimizer)
+        model, optimizer, scheduler = load_checkpoint(load_step, model, optimizer, scheduler)
         list_train_loss = np.load('{}/{}_train.npy'.format(args.loss, args.model_name)).tolist()
         list_loss = np.load('{}/{}.npy'.format(args.loss, args.model_name)).tolist()
         list_train_loss = list_train_loss[:global_epoch]
@@ -260,7 +254,7 @@ if __name__ == "__main__":
         model = torch.nn.DataParallel(model)
 
     for epoch in range(global_epoch + 1, args.epochs + 1):
-        training_epoch_loss = train(epoch, model, optimizer)
+        training_epoch_loss = train(epoch, model, optimizer, scheduler)
         with torch.no_grad():
             test_epoch_loss = evaluate(model)
 
@@ -272,7 +266,7 @@ if __name__ == "__main__":
 
         if test_loss > test_epoch_loss:
             test_loss = test_epoch_loss
-            save_checkpoint(model, optimizer, global_step, epoch)
+            save_checkpoint(model, optimizer, scheduler, global_step, epoch)
             print('Epoch {} Model Saved! Loss : {:.4f}'.format(epoch, test_loss))
             with torch.no_grad():
                 synthesize(model)

@@ -3,7 +3,7 @@ from torch.utils.data import Dataset
 import numpy as np
 import os
 
-max_time_steps = 6400
+max_time_steps = 16000
 upsample_conditional_features = True
 hop_length = 256
 

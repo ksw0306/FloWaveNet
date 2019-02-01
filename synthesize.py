@@ -18,15 +18,14 @@ parser.add_argument('--sample_path', type=str, default='./samples', help='Sample
 parser.add_argument('--model_name', type=str, default='flowavenet', help='Model Name')
 parser.add_argument('--num_samples', type=int, default=10, help='# of audio samples')
 parser.add_argument('--load_step', type=int, default=0, help='Load Step')
-parser.add_argument('--temp', type=float, default=0.7, help='Temperature')
+parser.add_argument('--temp', type=float, default=0.8, help='Temperature')
 parser.add_argument('--load', '-l', type=str, default='./params', help='Checkpoint path to resume / test.')
 parser.add_argument('--n_layer', type=int, default=2, help='Number of layers')
 parser.add_argument('--n_flow', type=int, default=6, help='Number of layers')
 parser.add_argument('--n_block', type=int, default=8, help='Number of layers')
 parser.add_argument('--cin_channels', type=int, default=80, help='Cin Channels')
-parser.add_argument('--causal', type=str, default='no', help='Casuality')
+parser.add_argument('--block_per_split', type=int, default=4, help='Block per split')
 parser.add_argument('--num_workers', type=int, default=0, help='Number of workers')
-
 parser.add_argument('--log', type=str, default='./log', help='Log folder.')
 args = parser.parse_args()
 
@@ -45,21 +44,19 @@ synth_loader = DataLoader(test_dataset, batch_size=1, collate_fn=collate_fn_synt
 
 
 def build_model():
-    causality = True if args.causal == 'yes' else False
     model = Flowavenet(in_channel=1,
                        cin_channel=args.cin_channels,
                        n_block=args.n_block,
                        n_flow=args.n_flow,
                        n_layer=args.n_layer,
                        affine=True,
-                       causal=causality,
-                       pretrained=True)
+                       pretrained=True,
+                       block_per_split=args.block_per_split)
     return model
 
 
 def synthesize(model):
     global global_step
-    model.eval()
     for batch_idx, (x, c) in enumerate(synth_loader):
         if batch_idx < args.num_samples:
             x, c = x.to(device), c.to(device)

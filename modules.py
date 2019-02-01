@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import math
 
 
@@ -97,7 +96,7 @@ class Wavenet(nn.Module):
         for b in range(num_blocks):
             for n in range(num_layers):
                 self.res_blocks.append(ResBlock(residual_channels, gate_channels, skip_channels,
-                                                kernel_size, dilation=kernel_size ** n,
+                                                kernel_size, dilation=2**n,
                                                 cin_channels=cin_channels, local_conditioning=True,
                                                 causal=causal))
 
